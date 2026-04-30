@@ -19,6 +19,7 @@ import AlertCard from '../../components/AlertCard';
 import { Alert } from '../../types';
 import { ALERT_CATEGORIES, HAITI_CITIES } from '../../constants/config';
 import CityZonePicker from '../../components/CityZonePicker';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const { height } = Dimensions.get('window');
 
@@ -68,6 +69,7 @@ export default function MapTab() {
   const [locationError, setLocationError] = useState(false);
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
 
+  const T = useTranslation();
   const active = getActiveAlerts();
   const critical = active.filter((a) => a.severity === 4);
   const isLEO = user?.role === 'police' || user?.role === 'moderator';
@@ -117,7 +119,7 @@ export default function MapTab() {
         >
           <Ionicons name="warning" size={18} color="#fff" />
           <Text style={styles.criticalText}>
-            {critical.length} alerte{critical.length > 1 ? 's' : ''} critique{critical.length > 1 ? 's' : ''} en cours
+            {critical.length} {critical.length > 1 ? T('mapCriticalBannerPlural') : T('mapCriticalBanner')}
           </Text>
           <Ionicons name="chevron-forward" size={16} color="#fff" />
         </TouchableOpacity>
@@ -173,7 +175,7 @@ export default function MapTab() {
                         <Text style={styles.calloutCategory}>{cat.label}</Text>
                         {isPending && (
                           <View style={styles.pendingPill}>
-                            <Text style={styles.pendingPillText}>En attente</Text>
+                            <Text style={styles.pendingPillText}>{T('mapCalloutPending')}</Text>
                           </View>
                         )}
                       </View>
@@ -183,9 +185,9 @@ export default function MapTab() {
                       </Text>
                       <View style={styles.calloutFooter}>
                         <Text style={styles.calloutConf}>
-                          {a.confirmations} confirmation{a.confirmations !== 1 ? 's' : ''}
+                          {a.confirmations} {a.confirmations !== 1 ? T('mapConfirmationPlural') : T('mapConfirmation')}
                         </Text>
-                        <Text style={styles.calloutLink}>Voir détails →</Text>
+                        <Text style={styles.calloutLink}>{T('mapSeeDetails')}</Text>
                       </View>
                       {isLEO && (
                         <Text style={styles.calloutCoords}>
@@ -231,7 +233,7 @@ export default function MapTab() {
             <View key={s} style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: SEVERITY_COLORS[s] }]} />
               <Text style={styles.legendText}>
-                {s === 4 ? 'Critique' : s === 3 ? 'Élevé' : s === 2 ? 'Modéré' : 'Faible'}
+                {s === 4 ? T('mapLegendCritical') : s === 3 ? T('mapLegendHigh') : s === 2 ? T('mapLegendMed') : T('mapLegendLow')}
               </Text>
             </View>
           ))}
@@ -241,34 +243,34 @@ export default function MapTab() {
         {!isLEO && (
           <View style={styles.privacyNote}>
             <Ionicons name="eye-off-outline" size={12} color={C.textMuted} />
-            <Text style={styles.privacyText}>Zones approximatives — position exacte masquée</Text>
+            <Text style={styles.privacyText}>{T('mapPrivacy')}</Text>
           </View>
         )}
       </View>
 
       {/* Stats strip */}
       <View style={styles.statsRow}>
-        <StatChip icon="warning" color={C.danger} value={active.length} label="Actives" />
+        <StatChip icon="warning" color={C.danger} value={active.length} label={T('mapStatActive')} />
         <StatChip
           icon="time"
           color={C.warning}
           value={alerts.filter((a) => a.status === 'pending').length}
-          label="En attente"
+          label={T('mapStatPending')}
         />
         <StatChip
           icon="checkmark-circle"
           color={C.success}
           value={alerts.filter((a) => a.status === 'resolved').length}
-          label="Résolues"
+          label={T('mapStatResolved')}
         />
       </View>
 
       {/* Recent alerts panel */}
       <View style={styles.recentPanel}>
         <View style={styles.recentHeader}>
-          <Text style={styles.recentTitle}>Alertes récentes</Text>
+          <Text style={styles.recentTitle}>{T('mapRecentTitle')}</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/alerts')}>
-            <Text style={styles.viewAll}>Voir tout</Text>
+            <Text style={styles.viewAll}>{T('mapViewAll')}</Text>
           </TouchableOpacity>
         </View>
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -284,7 +286,7 @@ export default function MapTab() {
       {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={() => router.push('/report/new')}>
         <Ionicons name="add" size={28} color="#fff" />
-        <Text style={styles.fabText}>Signaler</Text>
+        <Text style={styles.fabText}>{T('mapFab')}</Text>
       </TouchableOpacity>
 
       <CityZonePicker

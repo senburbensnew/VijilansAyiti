@@ -15,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors } from '../../constants/colors';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuthStore, OtpMethod } from '../../store/authStore';
+import { useLanguageStore } from '../../store/languageStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -24,6 +26,8 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
+  const { language, setLanguage } = useLanguageStore();
+  const T = useTranslation();
   const {
     isLoading,
     error,
@@ -60,14 +64,25 @@ export default function Login() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Lang toggle */}
+        <TouchableOpacity
+          style={[styles.langBtn, { borderColor: C.border, backgroundColor: C.surface }]}
+          onPress={() => setLanguage(language === 'fr' ? 'ht' : 'fr')}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.langBtnText, { color: C.text }]}>
+            {language === 'fr' ? '🇫🇷 FR' : '🇭🇹 KR'}
+          </Text>
+        </TouchableOpacity>
+
         {/* Brand */}
         <View style={styles.brand}>
           <View style={styles.logoCircle}>
             <Ionicons name="shield" size={48} color={C.danger} />
           </View>
           <Text style={styles.title}>VijilansAyiti</Text>
-          <Text style={styles.subtitle}>Protejons kominote nou ansanm</Text>
-          <Text style={styles.subtitleFr}>Protégeons notre communauté ensemble</Text>
+          <Text style={styles.subtitle}>{T('loginSubtitleHt')}</Text>
+          <Text style={styles.subtitleFr}>{T('loginSubtitleFr')}</Text>
         </View>
 
         {/* Form */}
@@ -90,7 +105,7 @@ export default function Login() {
 
           {method === 'sms' ? (
             <>
-              <Text style={styles.label}>Numéro de téléphone</Text>
+              <Text style={styles.label}>{T('loginPhoneLabel')}</Text>
               <View style={styles.inputRow}>
                 <View style={styles.prefix}>
                   <Text style={styles.prefixText}>🇭🇹 +509</Text>
@@ -105,13 +120,11 @@ export default function Login() {
                   maxLength={8}
                 />
               </View>
-              <Text style={styles.hint}>
-                Un code à 6 chiffres vous sera envoyé par SMS
-              </Text>
+              <Text style={styles.hint}>{T('loginSmsHint')}</Text>
             </>
           ) : (
             <>
-              <Text style={styles.label}>Adresse e-mail</Text>
+              <Text style={styles.label}>{T('loginEmailLabel')}</Text>
               <TextInput
                 style={[styles.input, styles.inputFull]}
                 placeholder="exemple@gmail.com"
@@ -122,9 +135,7 @@ export default function Login() {
                 value={email}
                 onChangeText={setEmail}
               />
-              <Text style={styles.hint}>
-                Un code à 6 chiffres vous sera envoyé par e-mail
-              </Text>
+              <Text style={styles.hint}>{T('loginEmailHint')}</Text>
             </>
           )}
 
@@ -142,7 +153,7 @@ export default function Login() {
                   size={18}
                   color="#fff"
                 />
-                <Text style={styles.btnText}>Recevoir le code OTP</Text>
+                <Text style={styles.btnText}>{T('loginSubmitBtn')}</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </>
             )}
@@ -156,7 +167,7 @@ export default function Login() {
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ou</Text>
+            <Text style={styles.dividerText}>{T('loginOr')}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -165,9 +176,7 @@ export default function Login() {
             onPress={() => router.push('/report/new')}
           >
             <Ionicons name="eye-off-outline" size={16} color={C.textMuted} />
-            <Text style={styles.anonText}>
-              Signaler anonymement (limité à 1 signalement)
-            </Text>
+            <Text style={styles.anonText}>{T('loginAnon')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -175,9 +184,7 @@ export default function Login() {
         <View style={styles.securityNote}>
           <Ionicons name="lock-closed-outline" size={14} color={C.textMuted} />
           <Text style={styles.securityText}>
-            {method === 'sms'
-              ? 'Votre numéro est chiffré. Les bandits évitent de laisser des traces.'
-              : 'Votre adresse e-mail est chiffrée et ne sera jamais partagée.'}
+            {method === 'sms' ? T('loginSecurityPhone') : T('loginSecurityEmail')}
           </Text>
         </View>
       </ScrollView>
@@ -203,6 +210,8 @@ function MethodTab({
 function makeStyles(C: ThemeColors) {
   return StyleSheet.create({
     container: { flexGrow: 1, backgroundColor: C.black, padding: 24, justifyContent: 'center' },
+    langBtn: { alignSelf: 'flex-end', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16, borderWidth: 1, marginBottom: 8 },
+    langBtnText: { fontSize: 12, fontWeight: '700' },
     brand: { alignItems: 'center', marginBottom: 40 },
     logoCircle: {
       width: 96, height: 96, borderRadius: 48,

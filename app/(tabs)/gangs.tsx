@@ -20,12 +20,13 @@ import { ThemeColors } from '../../constants/colors';
 import { useGangStore } from '../../store/gangStore';
 import { GangMember, GangMemberStatus } from '../../types';
 import { useTheme } from '../../hooks/useTheme';
+import { useTranslation } from '../../hooks/useTranslation';
 
-const STATUS_CONFIG: Record<GangMemberStatus, { label: string; color: string; icon: string }> = {
-  recherché: { label: 'Recherché', color: '#FF4500', icon: 'alert-circle' },
-  actif: { label: 'Actif', color: '#FF0000', icon: 'radio-button-on' },
-  arrêté: { label: 'Arrêté', color: '#22C55E', icon: 'lock-closed' },
-  décédé: { label: 'Décédé', color: '#8892B0', icon: 'skull' },
+const STATUS_CONFIG: Record<GangMemberStatus, { color: string; icon: string }> = {
+  recherché: { color: '#FF4500', icon: 'alert-circle' },
+  actif: { color: '#FF0000', icon: 'radio-button-on' },
+  arrêté: { color: '#22C55E', icon: 'lock-closed' },
+  décédé: { color: '#8892B0', icon: 'skull' },
 };
 
 const DANGER_COLORS: Record<number, string> = {
@@ -35,26 +36,28 @@ const DANGER_COLORS: Record<number, string> = {
   4: '#FF0000',
 };
 
-const DANGER_LABELS: Record<number, string> = {
-  1: 'Faible',
-  2: 'Modéré',
-  3: 'Élevé',
-  4: 'Extrême',
-};
-
-const STATUS_FILTERS: { key: GangMemberStatus | null; label: string }[] = [
-  { key: null, label: 'Tous' },
-  { key: 'recherché', label: 'Recherchés' },
-  { key: 'actif', label: 'Actifs' },
-  { key: 'arrêté', label: 'Arrêtés' },
-  { key: 'décédé', label: 'Décédés' },
-];
 
 export default function GangsTab() {
   const { search, statusFilter, setSearch, setStatusFilter, getFiltered } = useGangStore();
   const [selected, setSelected] = useState<GangMember | null>(null);
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
+  const T = useTranslation();
+
+  const DANGER_LABELS: Record<number, string> = {
+    1: T('gangsDangerLow'),
+    2: T('gangsDangerMed'),
+    3: T('gangsDangerHigh'),
+    4: T('gangsDangerExtreme'),
+  };
+
+  const STATUS_FILTERS: { key: GangMemberStatus | null; label: string }[] = [
+    { key: null, label: T('gangsFilterAll') },
+    { key: 'recherché', label: T('gangsFilterWanted') },
+    { key: 'actif', label: T('gangsFilterActive') },
+    { key: 'arrêté', label: T('gangsFilterArrested') },
+    { key: 'décédé', label: T('gangsFilterDeceased') },
+  ];
 
   const filtered = getFiltered();
 
@@ -63,9 +66,7 @@ export default function GangsTab() {
       {/* Warning banner */}
       <View style={styles.warningBanner}>
         <Ionicons name="shield-checkmark" size={14} color={C.warning} />
-        <Text style={styles.warningText}>
-          Informations issues de sources publiques et rapports officiels
-        </Text>
+        <Text style={styles.warningText}>{T('gangsWarning')}</Text>
       </View>
 
       {/* Search */}
@@ -73,7 +74,7 @@ export default function GangsTab() {
         <Ionicons name="search-outline" size={16} color={C.textMuted} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Alias, vrai nom, gang, zone…"
+          placeholder={T('gangsSearchPlaceholder')}
           placeholderTextColor={C.textMuted}
           value={search}
           onChangeText={setSearch}
@@ -112,37 +113,47 @@ export default function GangsTab() {
 
       {/* Count */}
       <Text style={styles.countLabel}>
-        {filtered.length} membre{filtered.length !== 1 ? 's' : ''} répertorié{filtered.length !== 1 ? 's' : ''}
+        {filtered.length} {filtered.length !== 1 ? T('gangsMemberCountPlural') : T('gangsMemberCount')}
       </Text>
 
       {/* List */}
       <FlatList
         data={filtered}
         keyExtractor={(m) => m.id}
-        renderItem={({ item }) => <MemberCard member={item} onPress={() => setSelected(item)} />}
+        renderItem={({ item }) => (
+          <MemberCard member={item} onPress={() => setSelected(item)} dangerLabels={DANGER_LABELS} />
+        )}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="search-outline" size={40} color={C.textMuted} />
-            <Text style={styles.emptyText}>Aucun résultat</Text>
+            <Text style={styles.emptyText}>{T('gangsEmpty')}</Text>
           </View>
         }
       />
 
       {/* Detail modal */}
       {selected && (
-        <MemberDetailModal member={selected} onClose={() => setSelected(null)} />
+        <MemberDetailModal member={selected} onClose={() => setSelected(null)} dangerLabels={DANGER_LABELS} />
       )}
     </View>
   );
 }
 
-function MemberCard({ member, onPress }: { member: GangMember; onPress: () => void }) {
+function MemberCard({ member, onPress, dangerLabels }: { member: GangMember; onPress: () => void; dangerLabels: Record<number, string> }) {
   const C = useTheme();
+  const T = useTranslation();
   const styles = useMemo(() => makeMemberCardStyles(C), [C]);
   const statusCfg = STATUS_CONFIG[member.status];
   const dangerColor = DANGER_COLORS[member.dangerLevel];
+
+  const statusLabels: Record<GangMemberStatus, string> = {
+    recherché: T('gangsStatusWanted'),
+    actif: T('gangsStatusActive'),
+    arrêté: T('gangsStatusArrested'),
+    décédé: T('gangsStatusDeceased'),
+  };
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
@@ -163,7 +174,7 @@ function MemberCard({ member, onPress }: { member: GangMember; onPress: () => vo
             <Text style={styles.alias}>{member.alias}</Text>
             <View style={[styles.statusPill, { backgroundColor: `${statusCfg.color}25`, borderColor: statusCfg.color }]}>
               <Ionicons name={statusCfg.icon as any} size={10} color={statusCfg.color} />
-              <Text style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
+              <Text style={[styles.statusText, { color: statusCfg.color }]}>{statusLabels[member.status]}</Text>
             </View>
           </View>
           {member.realName && <Text style={styles.realName}>{member.realName}</Text>}
@@ -179,7 +190,7 @@ function MemberCard({ member, onPress }: { member: GangMember; onPress: () => vo
           <View style={styles.cardBottomRow}>
             <View style={[styles.dangerBadge, { backgroundColor: `${dangerColor}20` }]}>
               <Text style={[styles.dangerText, { color: dangerColor }]}>
-                Danger {DANGER_LABELS[member.dangerLevel]}
+                {T('gangsDanger')} {dangerLabels[member.dangerLevel]}
               </Text>
             </View>
             <View style={styles.territoryRow}>
@@ -196,12 +207,20 @@ function MemberCard({ member, onPress }: { member: GangMember; onPress: () => vo
   );
 }
 
-function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: () => void }) {
+function MemberDetailModal({ member, onClose, dangerLabels }: { member: GangMember; onClose: () => void; dangerLabels: Record<number, string> }) {
   const C = useTheme();
+  const T = useTranslation();
   const styles = useMemo(() => makeModalStyles(C), [C]);
   const statusCfg = STATUS_CONFIG[member.status];
   const dangerColor = DANGER_COLORS[member.dangerLevel];
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const statusLabels: Record<GangMemberStatus, string> = {
+    recherché: T('gangsStatusWanted'),
+    actif: T('gangsStatusActive'),
+    arrêté: T('gangsStatusArrested'),
+    décédé: T('gangsStatusDeceased'),
+  };
 
   const photos: string[] = member.photoUris?.length
     ? member.photoUris
@@ -216,7 +235,7 @@ function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: (
           <TouchableOpacity onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={22} color={C.text} />
           </TouchableOpacity>
-          <Text style={styles.modalTitle}>Fiche d'identité</Text>
+          <Text style={styles.modalTitle}>{T('gangsModalTitle')}</Text>
           <View style={{ width: 30 }} />
         </View>
 
@@ -244,7 +263,7 @@ function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: (
               </ScrollView>
               {photos.length > 1 && (
                 <Text style={styles.lightboxCounter}>
-                  {lightboxIndex + 1} / {photos.length}
+                  {(lightboxIndex ?? 0) + 1} / {photos.length}
                 </Text>
               )}
             </View>
@@ -267,7 +286,7 @@ function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: (
                 </ScrollView>
                 {photos.length > 1 && (
                   <Text style={styles.photoCount}>
-                    <Ionicons name="images-outline" size={11} color={C.textMuted} /> {photos.length} photos
+                    <Ionicons name="images-outline" size={11} color={C.textMuted} /> {photos.length} {T('gangsPhotos')}
                   </Text>
                 )}
               </View>
@@ -281,11 +300,11 @@ function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: (
             <View style={styles.modalPillRow}>
               <View style={[styles.statusPill, { backgroundColor: `${statusCfg.color}25`, borderColor: statusCfg.color }]}>
                 <Ionicons name={statusCfg.icon as any} size={12} color={statusCfg.color} />
-                <Text style={[styles.statusText, { color: statusCfg.color, fontSize: 13 }]}>{statusCfg.label}</Text>
+                <Text style={[styles.statusText, { color: statusCfg.color, fontSize: 13 }]}>{statusLabels[member.status]}</Text>
               </View>
               <View style={[styles.dangerBadge, { backgroundColor: `${dangerColor}20`, paddingHorizontal: 12, paddingVertical: 5 }]}>
                 <Text style={[styles.dangerText, { color: dangerColor, fontSize: 13 }]}>
-                  Danger {DANGER_LABELS[member.dangerLevel]}
+                  {T('gangsDanger')} {dangerLabels[member.dangerLevel]}
                 </Text>
               </View>
             </View>
@@ -298,16 +317,16 @@ function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: (
               activeOpacity={0.75}
             >
               <Ionicons name="shield-checkmark" size={16} color="#00BFFF" />
-              <Text style={styles.dcpjButtonText}>Fiche officielle DCPJ</Text>
+              <Text style={styles.dcpjButtonText}>{T('gangsDcpjBtn')}</Text>
               <Ionicons name="open-outline" size={14} color="#00BFFF" style={{ marginLeft: 'auto' }} />
             </TouchableOpacity>
           )}
 
-          <DetailSection icon="people" label="Gang" color={C.primary} styles={styles}>
+          <DetailSection icon="people" label={T('gangsSectionGang')} color={C.primary} styles={styles}>
             <Text style={styles.detailValue}>{member.gang}</Text>
           </DetailSection>
 
-          <DetailSection icon="map" label="Territoire" color={C.warning} styles={styles}>
+          <DetailSection icon="map" label={T('gangsSectionTerritory')} color={C.warning} styles={styles}>
             <View style={styles.tagRow}>
               {member.territory.map((t) => (
                 <View key={t} style={styles.tag}>
@@ -318,7 +337,7 @@ function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: (
             </View>
           </DetailSection>
 
-          <DetailSection icon="document-text" label="Chefs d'accusation" color={C.danger} styles={styles}>
+          <DetailSection icon="document-text" label={T('gangsSectionCharges')} color={C.danger} styles={styles}>
             {member.charges.map((c) => (
               <View key={c} style={styles.chargeRow}>
                 <View style={styles.chargeDot} />
@@ -328,7 +347,7 @@ function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: (
           </DetailSection>
 
           {member.lastSeen && (
-            <DetailSection icon="time" label="Dernière localisation connue" color={C.textMuted} styles={styles}>
+            <DetailSection icon="time" label={T('gangsSectionLastSeen')} color={C.textMuted} styles={styles}>
               <Text style={styles.detailValue}>
                 {new Date(member.lastSeen).toLocaleDateString('fr-FR', {
                   year: 'numeric', month: 'long', day: 'numeric',
@@ -337,15 +356,13 @@ function MemberDetailModal({ member, onClose }: { member: GangMember; onClose: (
             </DetailSection>
           )}
 
-          <DetailSection icon="information-circle" label="Contexte" color={C.textSecondary} styles={styles}>
+          <DetailSection icon="information-circle" label={T('gangsSectionContext')} color={C.textSecondary} styles={styles}>
             <Text style={[styles.detailValue, { lineHeight: 20 }]}>{member.description}</Text>
           </DetailSection>
 
           <View style={styles.legalNote}>
             <Ionicons name="shield-outline" size={14} color={C.textMuted} />
-            <Text style={styles.legalText}>
-              Ces informations sont issues de sources journalistiques et rapports officiels. Ne pas harceler, accuser sans preuve, ni se faire justice soi-même.
-            </Text>
+            <Text style={styles.legalText}>{T('gangsLegalNote')}</Text>
           </View>
         </ScrollView>
       </SafeAreaView>

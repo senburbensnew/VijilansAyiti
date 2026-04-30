@@ -152,6 +152,7 @@ export const ALERT_CATEGORIES = {
   manifestation_violente: { label: 'Manifestation violente', icon: 'people', color: '#EF4444' },
   meurtre: { label: 'Meurtre / Homicide', icon: 'skull', color: '#7F1D1D' },
   trafic_organe: { label: 'Trafic d\'organes', icon: 'medical', color: '#6D28D9' },
+  bandit_apercu: { label: 'Bandit aperçu dans la zone', icon: 'eye', color: '#DC2626' },
   autre: { label: 'Autre activité suspecte', icon: 'alert-circle', color: '#8892B0' },
 } as const;
 

@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors } from '../../constants/colors';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuthStore } from '../../store/authStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 function maskEmail(email: string) {
   const [local, domain] = email.split('@');
@@ -28,6 +29,7 @@ function maskPhone(phone: string) {
 export default function VerifyOTP() {
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
+  const T = useTranslation();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [countdown, setCountdown] = useState(60);
   const [error, setError] = useState('');
@@ -93,7 +95,7 @@ export default function VerifyOTP() {
         <Ionicons name={channelIcon as any} size={48} color={C.primary} />
       </View>
 
-      <Text style={styles.title}>Vérification OTP</Text>
+      <Text style={styles.title}>{T('otpTitle')}</Text>
 
       {/* Destination info */}
       <View style={styles.destinationBox}>
@@ -103,13 +105,13 @@ export default function VerifyOTP() {
           color={C.primary}
         />
         <Text style={styles.destinationText}>
-          Code envoyé par {channelLabel} à{' '}
+          {T('otpSentTo')} {channelLabel} {T('otpTo')}{' '}
           <Text style={styles.destinationValue}>{destination}</Text>
         </Text>
       </View>
 
       <Text style={styles.hint}>
-        Entrez le code à 6 chiffres reçu par {channelLabel}
+        {T('otpHint')} {channelLabel}
       </Text>
 
       {/* OTP inputs */}
@@ -139,7 +141,7 @@ export default function VerifyOTP() {
         {isLoading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.btnText}>Vérifier</Text>
+          <Text style={styles.btnText}>{T('otpVerify')}</Text>
         )}
       </TouchableOpacity>
 
@@ -151,12 +153,12 @@ export default function VerifyOTP() {
       >
         {countdown > 0 ? (
           <Text style={styles.resendDisabled}>
-            Renvoyer dans{' '}
+            {T('otpResendIn')}{' '}
             <Text style={styles.resendCountdown}>{countdown}s</Text>
           </Text>
         ) : (
           <Text style={styles.resendActive}>
-            Renvoyer le code par {channelLabel}
+            {T('otpResend')} {channelLabel}
           </Text>
         )}
       </TouchableOpacity>
@@ -169,7 +171,7 @@ export default function VerifyOTP() {
           color={C.textMuted}
         />
         <Text style={styles.switchMethodText}>
-          Recevoir via {otpMethod === 'email' ? 'SMS' : 'e-mail'} à la place
+          {T('otpSwitchVia')} {otpMethod === 'email' ? 'SMS' : 'e-mail'} {T('otpSwitchInstead')}
         </Text>
       </TouchableOpacity>
     </View>

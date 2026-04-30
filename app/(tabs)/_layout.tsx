@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useAlertStore } from '../../store/alertStore';
 import { useAuthStore } from '../../store/authStore';
+import { useLanguageStore } from '../../store/languageStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 function AlertsBadge() {
   const active = useAlertStore((s) => s.alerts.filter((a) => a.status === 'active').length);
@@ -16,9 +18,26 @@ function AlertsBadge() {
   );
 }
 
+function LangButton() {
+  const C = useTheme();
+  const { language, setLanguage } = useLanguageStore();
+  return (
+    <TouchableOpacity
+      style={[styles.langBtn, { borderColor: C.border, backgroundColor: C.surface }]}
+      onPress={() => setLanguage(language === 'fr' ? 'ht' : 'fr')}
+      activeOpacity={0.7}
+    >
+      <Text style={[styles.langBtnText, { color: C.text }]}>
+        {language === 'fr' ? '🇫🇷 FR' : '🇭🇹 KR'}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
 export default function TabsLayout() {
   const { user } = useAuthStore();
   const C = useTheme();
+  const T = useTranslation();
 
   return (
     <Tabs
@@ -41,14 +60,17 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Carte',
+          title: T('tabMap'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="map" size={size} color={color} />
           ),
           headerTitle: 'VijilansAyiti',
           headerRight: () => (
-            <View style={{ marginRight: 16 }}>
-              <AlertsBadge />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginRight: 4 }}>
+              <LangButton />
+              <View style={{ marginRight: 8 }}>
+                <AlertsBadge />
+              </View>
             </View>
           ),
         }}
@@ -56,7 +78,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="alerts"
         options={{
-          title: 'Alertes',
+          title: T('tabAlerts'),
           tabBarIcon: ({ color, size }) => (
             <View>
               <Ionicons name="warning" size={size} color={color} />
@@ -68,20 +90,21 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="gangs"
         options={{
-          title: 'Bandits',
+          title: T('tabGangs'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="skull" size={size} color={color} />
           ),
-          headerTitle: 'Membres de gangs',
+          headerTitle: T('headerGangs'),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profil',
+          title: T('tabProfile'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-circle" size={size} color={color} />
           ),
+          headerRight: () => <LangButton />,
         }}
       />
     </Tabs>
@@ -89,6 +112,14 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
+  langBtn: {
+    marginRight: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  langBtnText: { fontSize: 12, fontWeight: '700' },
   badge: {
     position: 'absolute',
     top: -6,

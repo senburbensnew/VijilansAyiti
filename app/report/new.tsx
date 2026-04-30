@@ -9,13 +9,16 @@ import {
   Switch,
   Alert,
   ActivityIndicator,
+  Image,
+  Platform,
 } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { ThemeColors } from '../../constants/colors';
 import { useTheme } from '../../hooks/useTheme';
 import { ALERT_CATEGORIES, HaitiCity } from '../../constants/config';
-import { AlertCategory } from '../../types';
+import { AlertCategory, BanditInfo } from '../../types';
 import { useAlertStore } from '../../store/alertStore';
 import { useAuthStore } from '../../store/authStore';
 import CityZonePicker from '../../components/CityZonePicker';
@@ -39,14 +42,91 @@ export default function NewReport() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [mediaUris, setMediaUris] = useState<string[]>([]);
+
+  // Bandit-specific fields
+  const [banditNombre, setBanditNombre] = useState('');
+  const [banditPhysique, setBanditPhysique] = useState('');
+  const [banditVetements, setBanditVetements] = useState('');
+  const [banditArme, setBanditArme] = useState(false);
+  const [banditTypeArme, setBanditTypeArme] = useState('');
+  const [banditDirection, setBanditDirection] = useState('');
+
   const { addAlert } = useAlertStore();
   const { user } = useAuthStore();
 
+  const isBandit = category === 'bandit_apercu';
   const canSubmit = description.trim().length >= 10 && zone.trim().length >= 3;
 
   const handleZoneSelect = (zoneLabel: string, city: HaitiCity) => {
     setZone(zoneLabel);
     setSelectedCity(city);
+  };
+
+  const requestMediaPermission = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission refusée', 'Autorisez l\'accès à la galerie dans les paramètres.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const pickFromGallery = async () => {
+    if (mediaUris.length >= 4) {
+      Alert.alert('Limite atteinte', 'Maximum 4 fichiers par signalement.');
+      return;
+    }
+    const ok = await requestMediaPermission();
+    if (!ok) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      allowsMultipleSelection: true,
+      selectionLimit: 4 - mediaUris.length,
+      quality: 0.7,
+      videoMaxDuration: 60,
+    });
+    if (!result.canceled) {
+      setMediaUris((prev) => [...prev, ...result.assets.map((a) => a.uri)].slice(0, 4));
+    }
+  };
+
+  const takePhoto = async () => {
+    if (mediaUris.length >= 4) {
+      Alert.alert('Limite atteinte', 'Maximum 4 fichiers par signalement.');
+      return;
+    }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission refusée', 'Autorisez l\'accès à la caméra dans les paramètres.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images', 'videos'],
+      quality: 0.7,
+      videoMaxDuration: 60,
+    });
+    if (!result.canceled) {
+      setMediaUris((prev) => [...prev, result.assets[0].uri].slice(0, 4));
+    }
+  };
+
+  const removeMedia = (uri: string) => {
+    setMediaUris((prev) => prev.filter((u) => u !== uri));
+  };
+
+  const buildBanditInfo = (): BanditInfo | undefined => {
+    if (!isBandit) return undefined;
+    const info: BanditInfo = {};
+    if (banditNombre.trim()) info.nombreBandits = parseInt(banditNombre, 10) || undefined;
+    if (banditPhysique.trim()) info.descriptionPhysique = banditPhysique.trim();
+    if (banditVetements.trim()) info.vetements = banditVetements.trim();
+    info.arme = banditArme;
+    if (banditArme && banditTypeArme.trim()) info.typeArme = banditTypeArme.trim();
+    if (banditDirection.trim()) info.directionFuite = banditDirection.trim();
+    return info;
   };
 
   const handleSubmit = () => {
@@ -77,6 +157,8 @@ export default function NewReport() {
               isAnonymous: isAnonymous || !user,
               reporterId: isAnonymous ? undefined : user?.id,
               publicView: true,
+              banditInfo: buildBanditInfo(),
+              mediaUris: mediaUris.length > 0 ? mediaUris : undefined,
             });
             setIsLoading(false);
             Alert.alert(
@@ -199,6 +281,112 @@ export default function NewReport() {
         <Text style={[styles.hint, description.length < 10 && styles.hintError]}>
           {description.length}/10 caractères minimum
         </Text>
+
+        {/* ── Bandit section ── */}
+        {isBandit && (
+          <View style={styles.banditSection}>
+            <View style={styles.banditHeader}>
+              <Ionicons name="eye" size={16} color="#DC2626" />
+              <Text style={styles.banditTitle}>Informations sur le(s) bandit(s)</Text>
+              <Text style={styles.banditOptional}>(optionnel)</Text>
+            </View>
+
+            {/* Nombre */}
+            <Text style={styles.fieldLabel}>Nombre de bandits aperçus</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="ex: 3"
+              placeholderTextColor={C.textMuted}
+              value={banditNombre}
+              onChangeText={setBanditNombre}
+              keyboardType="number-pad"
+              maxLength={2}
+            />
+
+            {/* Description physique */}
+            <Text style={styles.fieldLabel}>Description physique</Text>
+            <TextInput
+              style={[styles.input, styles.textAreaSm]}
+              placeholder="Taille, corpulence, teint, âge approximatif…"
+              placeholderTextColor={C.textMuted}
+              value={banditPhysique}
+              onChangeText={setBanditPhysique}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+
+            {/* Vêtements */}
+            <Text style={styles.fieldLabel}>Vêtements / tenue</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="ex: t-shirt rouge, pantalon noir, casquette…"
+              placeholderTextColor={C.textMuted}
+              value={banditVetements}
+              onChangeText={setBanditVetements}
+            />
+
+            {/* Armé */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Armé(s) ?</Text>
+              <Switch
+                value={banditArme}
+                onValueChange={setBanditArme}
+                trackColor={{ true: '#DC2626', false: C.border }}
+                thumbColor={banditArme ? '#fff' : C.textMuted}
+              />
+            </View>
+            {banditArme && (
+              <TextInput
+                style={styles.input}
+                placeholder="Type d'arme (pistolet, fusil, machette…)"
+                placeholderTextColor={C.textMuted}
+                value={banditTypeArme}
+                onChangeText={setBanditTypeArme}
+              />
+            )}
+
+            {/* Direction de fuite */}
+            <Text style={styles.fieldLabel}>Direction de fuite</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="ex: vers Delmas 33, en véhicule blanc…"
+              placeholderTextColor={C.textMuted}
+              value={banditDirection}
+              onChangeText={setBanditDirection}
+            />
+
+            {/* Media */}
+            <Text style={[styles.fieldLabel, { marginTop: 8 }]}>Photos / Vidéos</Text>
+            <Text style={styles.mediaHint}>
+              Max 4 fichiers · photos et vidéos ≤ 60 s · anonymisez les visages d'innocents
+            </Text>
+
+            {mediaUris.length > 0 && (
+              <View style={styles.mediaGrid}>
+                {mediaUris.map((uri) => (
+                  <View key={uri} style={styles.mediaThumb}>
+                    <Image source={{ uri }} style={styles.thumbImg} />
+                    <TouchableOpacity style={styles.removeBtn} onPress={() => removeMedia(uri)}>
+                      <Ionicons name="close-circle" size={20} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View style={styles.mediaActions}>
+              <TouchableOpacity style={styles.mediaBtn} onPress={takePhoto}>
+                <Ionicons name="camera-outline" size={18} color={C.primary} />
+                <Text style={styles.mediaBtnText}>Caméra</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.mediaBtn} onPress={pickFromGallery}>
+                <Ionicons name="images-outline" size={18} color={C.primary} />
+                <Text style={styles.mediaBtnText}>Galerie</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* Anonymous toggle */}
         <View style={styles.anonRow}>
@@ -343,6 +531,10 @@ function makeStyles(C: ThemeColors) {
       minHeight: 100,
       paddingTop: 12,
     },
+    textAreaSm: {
+      minHeight: 72,
+      paddingTop: 12,
+    },
     hint: {
       color: C.textMuted,
       fontSize: 11,
@@ -351,6 +543,102 @@ function makeStyles(C: ThemeColors) {
     hintError: {
       color: C.warning,
     },
+    // Bandit section
+    banditSection: {
+      backgroundColor: '#1a0808',
+      borderWidth: 1,
+      borderColor: '#DC262655',
+      borderRadius: 12,
+      padding: 14,
+      gap: 10,
+      marginTop: 4,
+    },
+    banditHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 2,
+    },
+    banditTitle: {
+      color: '#DC2626',
+      fontWeight: '700',
+      fontSize: 13,
+    },
+    banditOptional: {
+      color: C.textMuted,
+      fontSize: 11,
+      marginLeft: 2,
+    },
+    fieldLabel: {
+      color: C.textSecondary,
+      fontSize: 12,
+      fontWeight: '600',
+      marginBottom: -2,
+    },
+    switchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: C.surface,
+      borderWidth: 1,
+      borderColor: C.border,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    switchLabel: {
+      color: C.text,
+      fontSize: 14,
+    },
+    mediaHint: {
+      color: C.textMuted,
+      fontSize: 11,
+      lineHeight: 16,
+      marginTop: -4,
+    },
+    mediaGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    mediaThumb: {
+      width: 72,
+      height: 72,
+      borderRadius: 8,
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    thumbImg: {
+      width: '100%',
+      height: '100%',
+    },
+    removeBtn: {
+      position: 'absolute',
+      top: 2,
+      right: 2,
+    },
+    mediaActions: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    mediaBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      backgroundColor: C.surface,
+      borderWidth: 1,
+      borderColor: C.border,
+      borderRadius: 10,
+      paddingVertical: 12,
+    },
+    mediaBtnText: {
+      color: C.primary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    // Anonymous
     anonRow: {
       flexDirection: 'row',
       alignItems: 'center',

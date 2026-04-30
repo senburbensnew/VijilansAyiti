@@ -86,6 +86,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   manifestation_violente: '🔥',
   meurtre: '💀',
   trafic_organe: '🫀',
+  bandit_apercu: '👁️',
   autre: '⚠️',
 };
 

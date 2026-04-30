@@ -17,13 +17,20 @@ import { useAuthStore } from '../../store/authStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { useTheme } from '../../hooks/useTheme';
 import { useThemeStore, ThemeMode } from '../../store/themeStore';
+import { useLanguageStore, Language } from '../../store/languageStore';
+import { useTranslation } from '../../hooks/useTranslation';
 import TrustBadge from '../../components/TrustBadge';
 import CityZonePicker from '../../components/CityZonePicker';
 
-const THEME_OPTIONS: { key: ThemeMode; label: string; icon: string }[] = [
-  { key: 'light', label: 'Clair', icon: 'sunny-outline' },
-  { key: 'dark', label: 'Sombre', icon: 'moon-outline' },
-  { key: 'system', label: 'Système', icon: 'phone-portrait-outline' },
+const THEME_ICONS: Record<ThemeMode, string> = {
+  light: 'sunny-outline',
+  dark: 'moon-outline',
+  system: 'phone-portrait-outline',
+};
+
+const LANGUAGE_OPTIONS: { key: Language; label: string; flag: string }[] = [
+  { key: 'fr', label: 'Français', flag: '🇫🇷' },
+  { key: 'ht', label: 'Kreyòl', flag: '🇭🇹' },
 ];
 
 export default function ProfileTab() {
@@ -39,6 +46,14 @@ export default function ProfileTab() {
   } = useNotificationStore();
   const C = useTheme();
   const { mode, setMode } = useThemeStore();
+  const { language, setLanguage } = useLanguageStore();
+  const T = useTranslation();
+
+  const THEME_OPTIONS: { key: ThemeMode; label: string; icon: string }[] = [
+    { key: 'light', label: T('profileThemeLight'), icon: THEME_ICONS.light },
+    { key: 'dark', label: T('profileThemeDark'), icon: THEME_ICONS.dark },
+    { key: 'system', label: T('profileThemeSystem'), icon: THEME_ICONS.system },
+  ];
   const styles = useMemo(() => makeStyles(C), [C]);
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
   const [editingPseudo, setEditingPseudo] = useState(false);
@@ -48,12 +63,12 @@ export default function ProfileTab() {
     return (
       <View style={styles.notAuth}>
         <Ionicons name="person-circle-outline" size={64} color={C.textMuted} />
-        <Text style={styles.notAuthText}>Vous n'êtes pas connecté</Text>
+        <Text style={styles.notAuthText}>{T('profileNotAuth')}</Text>
         <TouchableOpacity
           style={styles.loginBtn}
           onPress={() => router.replace('/(auth)/login')}
         >
-          <Text style={styles.loginBtnText}>Se connecter</Text>
+          <Text style={styles.loginBtnText}>{T('profileLoginBtn')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -82,10 +97,10 @@ export default function ProfileTab() {
   };
 
   const handleLogout = () => {
-    Alert.alert('Déconnexion', 'Voulez-vous vous déconnecter ?', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(T('profileLogoutTitle'), T('profileLogoutMsg'), [
+      { text: T('profileLogoutCancel'), style: 'cancel' },
       {
-        text: 'Déconnecter',
+        text: T('profileLogoutConfirm'),
         style: 'destructive',
         onPress: () => {
           logout();
@@ -113,7 +128,7 @@ export default function ProfileTab() {
                 onChangeText={setPseudoInput}
                 autoFocus
                 maxLength={24}
-                placeholder="Votre pseudo"
+                placeholder={T('profilePseudoPlaceholder')}
                 placeholderTextColor={C.textMuted}
               />
               <TouchableOpacity onPress={handleSavePseudo} disabled={isLoading} style={styles.pseudoActionBtn}>
@@ -131,16 +146,16 @@ export default function ProfileTab() {
               <Ionicons name="pencil-outline" size={14} color={C.textMuted} />
             </TouchableOpacity>
           )}
-          <Text style={styles.pseudoHint}>Pseudo public · appuyez pour modifier</Text>
+          <Text style={styles.pseudoHint}>{T('profilePseudoHint')}</Text>
           <View style={styles.roleRow}>
             <View style={[styles.roleBadge, getRoleStyle(user.role, C)]}>
               <Ionicons name={getRoleIcon(user.role) as any} size={12} color="#fff" />
-              <Text style={styles.roleText}>{getRoleLabel(user.role)}</Text>
+              <Text style={styles.roleText}>{getRoleLabel(user.role, T)}</Text>
             </View>
             {user.isVerified && (
               <View style={[styles.verifiedBadge, { borderColor: C.success }]}>
                 <Ionicons name="checkmark-circle" size={12} color={C.success} />
-                <Text style={[styles.roleText, { color: C.success }]}>Vérifié</Text>
+                <Text style={[styles.roleText, { color: C.success }]}>{T('profileVerified')}</Text>
               </View>
             )}
           </View>
@@ -150,7 +165,7 @@ export default function ProfileTab() {
       {/* Trust Score */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.sectionTitle}>Score de Confiance</Text>
+          <Text style={styles.sectionTitle}>{T('profileTrustTitle')}</Text>
           <TrustBadge score={user.trustScore} />
         </View>
         <View style={styles.progressBar}>
@@ -164,30 +179,28 @@ export default function ProfileTab() {
             ]}
           />
         </View>
-        <Text style={styles.trustHint}>
-          Basé sur l'historique de vos signalements validés
-        </Text>
+        <Text style={styles.trustHint}>{T('profileTrustHint')}</Text>
       </View>
 
       {/* Stats */}
       <View style={styles.statsGrid}>
-        <StatBox label="Signalements" value={user.reportCount} icon="document-text" C={C} />
+        <StatBox label={T('profileStatReports')} value={user.reportCount} icon="document-text" C={C} />
         <StatBox
-          label="Validés"
+          label={T('profileStatValidated')}
           value={user.validatedReports}
           icon="checkmark-circle"
           color={C.success}
           C={C}
         />
         <StatBox
-          label="Faux"
+          label={T('profileStatFalse')}
           value={user.falseReports}
           icon="close-circle"
           color={C.danger}
           C={C}
         />
         <StatBox
-          label="Précision"
+          label={T('profileStatAccuracy')}
           value={`${accuracy}%`}
           icon="analytics"
           color={C.primary}
@@ -199,7 +212,7 @@ export default function ProfileTab() {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Ionicons name="color-palette-outline" size={18} color={C.primary} />
-          <Text style={styles.sectionTitle}>Apparence</Text>
+          <Text style={styles.sectionTitle}>{T('profileAppearance')}</Text>
         </View>
         <View style={styles.themeToggle}>
           {THEME_OPTIONS.map((opt) => {
@@ -225,33 +238,57 @@ export default function ProfileTab() {
         </View>
       </View>
 
+      {/* Language */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="language-outline" size={18} color={C.primary} />
+          <Text style={styles.sectionTitle}>{T('profileLangTitle')}</Text>
+        </View>
+        <View style={styles.themeToggle}>
+          {LANGUAGE_OPTIONS.map((opt) => {
+            const active = language === opt.key;
+            return (
+              <TouchableOpacity
+                key={opt.key}
+                style={[styles.themeBtn, active && styles.themeBtnActive]}
+                onPress={() => setLanguage(opt.key)}
+                activeOpacity={0.75}
+              >
+                <Text style={{ fontSize: 20 }}>{opt.flag}</Text>
+                <Text style={[styles.themeBtnLabel, active && styles.themeBtnLabelActive]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
       {/* Security info */}
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Sécurité Opérationnelle</Text>
-        <InfoRow icon="eye-off-outline" text="Votre position exacte n'est jamais partagée publiquement" C={C} />
-        <InfoRow icon="time-outline" text="Délai de 2 min avant publication pour éviter les diversions" C={C} />
-        <InfoRow icon="shield-checkmark-outline" text="Vos signalements sont chiffrés et journalisés" C={C} />
-        <InfoRow icon="people-outline" text="3 confirmations indépendantes requises avant publication" C={C} />
+        <Text style={styles.sectionTitle}>{T('profileSecurityTitle')}</Text>
+        <InfoRow icon="eye-off-outline" text={T('profileSecInfo1')} C={C} />
+        <InfoRow icon="time-outline" text={T('profileSecInfo2')} C={C} />
+        <InfoRow icon="shield-checkmark-outline" text={T('profileSecInfo3')} C={C} />
+        <InfoRow icon="people-outline" text={T('profileSecInfo4')} C={C} />
       </View>
 
       {/* Notification settings */}
       <View style={styles.card}>
         <View style={styles.notifHeader}>
           <Ionicons name="notifications" size={18} color={C.primary} />
-          <Text style={styles.sectionTitle}>Notifications</Text>
+          <Text style={styles.sectionTitle}>{T('profileNotifTitle')}</Text>
           {!permissionGranted && (
             <View style={styles.permDeniedPill}>
-              <Text style={styles.permDeniedText}>Permission refusée</Text>
+              <Text style={styles.permDeniedText}>{T('profileNotifPermDenied')}</Text>
             </View>
           )}
         </View>
 
         <View style={styles.notifRow}>
           <View style={styles.notifRowInfo}>
-            <Text style={styles.notifRowLabel}>Activer les notifications</Text>
-            <Text style={styles.notifRowDesc}>
-              Soyez alerté des incidents dans votre zone
-            </Text>
+            <Text style={styles.notifRowLabel}>{T('profileNotifEnable')}</Text>
+            <Text style={styles.notifRowDesc}>{T('profileNotifEnableDesc')}</Text>
           </View>
           <Switch
             value={enabled}
@@ -265,10 +302,8 @@ export default function ProfileTab() {
           <>
             <View style={[styles.notifRow, styles.notifRowIndented]}>
               <View style={styles.notifRowInfo}>
-                <Text style={styles.notifRowLabel}>Critiques uniquement</Text>
-                <Text style={styles.notifRowDesc}>
-                  Seulement niveau 4 (fusillade, kidnapping…)
-                </Text>
+                <Text style={styles.notifRowLabel}>{T('profileNotifCritical')}</Text>
+                <Text style={styles.notifRowDesc}>{T('profileNotifCriticalDesc')}</Text>
               </View>
               <Switch
                 value={criticalOnly}
@@ -283,9 +318,9 @@ export default function ProfileTab() {
               onPress={() => setCityPickerVisible(true)}
             >
               <View style={styles.notifRowInfo}>
-                <Text style={styles.notifRowLabel}>Ville surveillée</Text>
+                <Text style={styles.notifRowLabel}>{T('profileNotifCity')}</Text>
                 <Text style={[styles.notifRowDesc, watchedCity && { color: C.primary }]}>
-                  {watchedCity ?? 'Tout Haïti (aucun filtre)'}
+                  {watchedCity ?? T('profileNotifAllHaiti')}
                 </Text>
               </View>
               <View style={styles.notifCityRight}>
@@ -321,7 +356,7 @@ export default function ProfileTab() {
           onPress={() => router.push('/moderator')}
         >
           <Ionicons name="shield" size={20} color={C.primary} />
-          <Text style={styles.modBtnText}>Espace Modérateur / Police</Text>
+          <Text style={styles.modBtnText}>{T('profileModBtn')}</Text>
           <Ionicons name="chevron-forward" size={16} color={C.primary} />
         </TouchableOpacity>
       )}
@@ -329,7 +364,7 @@ export default function ProfileTab() {
       {/* Logout */}
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={18} color={C.danger} />
-        <Text style={styles.logoutText}>Se déconnecter</Text>
+        <Text style={styles.logoutText}>{T('profileLogout')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -385,12 +420,12 @@ const infoRowStyle = StyleSheet.create({
   text: { fontSize: 13, flex: 1, lineHeight: 18 },
 });
 
-function getRoleLabel(role: string) {
+function getRoleLabel(role: string, T: ReturnType<typeof import('../../hooks/useTranslation').useTranslation>) {
   const map: Record<string, string> = {
-    anonymous: 'Anonyme',
-    user: 'Citoyen',
-    moderator: 'Modérateur',
-    police: "Forces de l'ordre",
+    anonymous: T('profileRoleAnonymous'),
+    user: T('profileRoleUser'),
+    moderator: T('profileRoleModerator'),
+    police: T('profileRolePolice'),
   };
   return map[role] ?? role;
 }

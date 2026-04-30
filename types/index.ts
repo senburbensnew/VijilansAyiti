@@ -24,6 +24,7 @@ export type AlertCategory =
   | 'manifestation_violente'
   | 'meurtre'
   | 'trafic_organe'
+  | 'bandit_apercu'
   | 'autre';
 
 export type AlertStatus =
@@ -50,6 +51,8 @@ export interface Alert {
   isAnonymous: boolean;
   // Ce que le public voit: zone floue. Police: coords exactes
   publicView: boolean;
+  banditInfo?: BanditInfo;
+  mediaUris?: string[];      // photos/vidéos jointes (optionnel)
 }
 
 export interface Report {
@@ -65,6 +68,8 @@ export interface Report {
   timestamp: string;
   isAnonymous: boolean;
   hasPhoto: boolean;
+  banditInfo?: BanditInfo;
+  mediaUris?: string[];
 }
 
 export interface Confirmation {
@@ -81,6 +86,15 @@ export interface Dispute {
   userId?: string;
   reason: string;
   timestamp: string;
+}
+
+export interface BanditInfo {
+  nombreBandits?: number;
+  descriptionPhysique?: string;   // taille, corpulence, signalement
+  vetements?: string;             // couleur/type de vêtements
+  arme?: boolean;
+  typeArme?: string;              // pistolet, fusil, machette…
+  directionFuite?: string;        // vers où ils se sont enfuis
 }
 
 export type GangMemberStatus = 'recherché' | 'actif' | 'arrêté' | 'décédé';

@@ -16,16 +16,9 @@ import { useAlertStore } from '../../store/alertStore';
 import { AlertStatus } from '../../types';
 import AlertCard from '../../components/AlertCard';
 import { useTheme } from '../../hooks/useTheme';
+import { useTranslation } from '../../hooks/useTranslation';
 
 type Filter = AlertStatus | 'all';
-
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'Toutes' },
-  { key: 'active', label: 'Actives' },
-  { key: 'pending', label: 'En attente' },
-  { key: 'disputed', label: 'Contestées' },
-  { key: 'resolved', label: 'Résolues' },
-];
 
 export default function AlertsTab() {
   const { alerts } = useAlertStore();
@@ -34,6 +27,15 @@ export default function AlertsTab() {
   const [cityFilter, setCityFilter] = useState<string | null>(null);
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
+  const T = useTranslation();
+
+  const FILTERS: { key: Filter; label: string }[] = [
+    { key: 'all', label: T('alertsFilterAll') },
+    { key: 'active', label: T('alertsFilterActive') },
+    { key: 'pending', label: T('alertsFilterPending') },
+    { key: 'disputed', label: T('alertsFilterDisputed') },
+    { key: 'resolved', label: T('alertsFilterResolved') },
+  ];
 
   const filtered = alerts.filter((a) => {
     const matchesFilter = filter === 'all' || a.status === filter;
@@ -53,7 +55,7 @@ export default function AlertsTab() {
           <Ionicons name="search-outline" size={16} color={C.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Chercher une zone ou description…"
+            placeholder={T('alertsSearchPlaceholder')}
             placeholderTextColor={C.textMuted}
             value={search}
             onChangeText={setSearch}
@@ -78,7 +80,7 @@ export default function AlertsTab() {
           onPress={() => setCityFilter(null)}
         >
           <Ionicons name="globe-outline" size={12} color={!cityFilter ? '#fff' : C.textMuted} />
-          <Text style={[styles.cityChipText, !cityFilter && styles.cityChipTextActive]}>Tout Haïti</Text>
+          <Text style={[styles.cityChipText, !cityFilter && styles.cityChipTextActive]}>{T('alertsAllHaiti')}</Text>
         </TouchableOpacity>
         {HAITI_CITIES.map((city) => {
           const active = cityFilter === city.name;
@@ -142,7 +144,7 @@ export default function AlertsTab() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="checkmark-circle-outline" size={48} color={C.success} />
-            <Text style={styles.emptyText}>Aucune alerte dans cette zone</Text>
+            <Text style={styles.emptyText}>{T('alertsEmpty')}</Text>
           </View>
         }
         showsVerticalScrollIndicator={false}
@@ -151,7 +153,7 @@ export default function AlertsTab() {
       {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={() => router.push('/report/new')}>
         <Ionicons name="add" size={26} color="#fff" />
-        <Text style={styles.fabText}>Signaler</Text>
+        <Text style={styles.fabText}>{T('alertsFab')}</Text>
       </TouchableOpacity>
     </View>
   );
