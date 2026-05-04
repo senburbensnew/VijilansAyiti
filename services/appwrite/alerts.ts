@@ -1,6 +1,6 @@
 import { ID, Query } from 'react-native-appwrite';
 import { databases, DATABASE_ID, COLLECTIONS } from './client';
-import { Alert, AlertCategory, AlertStatus } from '../../types';
+import { Alert, AlertCategory, AlertStatus, BanditInfo } from '../../types';
 import { CONFIRMATIONS_REQUIRED } from '../../constants/config';
 
 // ─── Mapper ──────────────────────────────────────────────────────────────────
@@ -23,6 +23,8 @@ function docToAlert(doc: any): Alert {
     reporterId:   doc.reporterId ?? undefined,
     isAnonymous:  doc.isAnonymous,
     publicView:   doc.publicView,
+    banditInfo:   doc.banditInfo ? (JSON.parse(doc.banditInfo) as BanditInfo) : undefined,
+    mediaUris:    doc.mediaUris ?? undefined,
   };
 }
 
@@ -57,6 +59,8 @@ export async function createAlert(data: Omit<Alert, 'id'>): Promise<Alert> {
       reporterId:   data.reporterId ?? null,
       isAnonymous:  data.isAnonymous,
       publicView:   data.publicView,
+      banditInfo:   data.banditInfo ? JSON.stringify(data.banditInfo) : null,
+      mediaUris:    data.mediaUris ?? null,
     },
   );
   return docToAlert(doc);

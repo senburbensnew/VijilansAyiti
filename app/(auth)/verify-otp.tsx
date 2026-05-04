@@ -7,7 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors } from '../../constants/colors';
 import { useTheme } from '../../hooks/useTheme';
@@ -27,6 +27,7 @@ function maskPhone(phone: string) {
 }
 
 export default function VerifyOTP() {
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const C = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const T = useTranslation();
@@ -72,7 +73,7 @@ export default function VerifyOTP() {
     if (authError) {
       setError(authError);
     } else if (isAuthenticated) {
-      router.replace('/(tabs)');
+      router.replace((returnTo as any) ?? '/(tabs)');
     }
   };
 

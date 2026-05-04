@@ -10,7 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors } from '../../constants/colors';
 import { useTheme } from '../../hooks/useTheme';
@@ -21,6 +21,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Login() {
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const [method, setMethod] = useState<OtpMethod>('sms');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -51,7 +52,7 @@ export default function Login() {
     }
     await sendOtp();
     if (!useAuthStore.getState().error) {
-      router.push('/(auth)/verify-otp');
+      router.push({ pathname: '/(auth)/verify-otp', params: returnTo ? { returnTo } : {} });
     }
   };
 
@@ -173,7 +174,7 @@ export default function Login() {
 
           <TouchableOpacity
             style={styles.anonBtn}
-            onPress={() => router.push('/report/new')}
+            onPress={() => router.push((returnTo as any) ?? '/report/new')}
           >
             <Ionicons name="eye-off-outline" size={16} color={C.textMuted} />
             <Text style={styles.anonText}>{T('loginAnon')}</Text>

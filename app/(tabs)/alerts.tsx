@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuthStore } from '../../store/authStore';
 import { ThemeColors } from '../../constants/colors';
 import { HAITI_CITIES } from '../../constants/config';
 import { useAlertStore } from '../../store/alertStore';
@@ -22,6 +23,7 @@ type Filter = AlertStatus | 'all';
 
 export default function AlertsTab() {
   const { alerts } = useAlertStore();
+  const { isAuthenticated } = useAuthStore();
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const [cityFilter, setCityFilter] = useState<string | null>(null);
@@ -151,7 +153,14 @@ export default function AlertsTab() {
       />
 
       {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/report/new')}>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() =>
+          isAuthenticated
+            ? router.push('/report/new')
+            : router.push({ pathname: '/(auth)/login', params: { returnTo: '/report/new' } })
+        }
+      >
         <Ionicons name="add" size={26} color="#fff" />
         <Text style={styles.fabText}>{T('alertsFab')}</Text>
       </TouchableOpacity>

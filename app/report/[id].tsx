@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert as RNAlert,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -162,6 +163,45 @@ export default function AlertDetail() {
         <Text style={styles.description}>{alert.description}</Text>
       </View>
 
+      {/* Bandit info */}
+      {alert.banditInfo && (
+        <View style={styles.banditCard}>
+          <View style={styles.banditCardHeader}>
+            <Ionicons name="eye" size={16} color="#DC2626" />
+            <Text style={styles.banditCardTitle}>Informations sur le(s) bandit(s)</Text>
+          </View>
+          {alert.banditInfo.nombreBandits != null && (
+            <BanditRow icon="people-outline" label="Nombre" value={String(alert.banditInfo.nombreBandits)} />
+          )}
+          {alert.banditInfo.descriptionPhysique && (
+            <BanditRow icon="body-outline" label="Description physique" value={alert.banditInfo.descriptionPhysique} />
+          )}
+          {alert.banditInfo.vetements && (
+            <BanditRow icon="shirt-outline" label="Vêtements" value={alert.banditInfo.vetements} />
+          )}
+          <BanditRow
+            icon="warning-outline"
+            label="Armé"
+            value={alert.banditInfo.arme ? `Oui${alert.banditInfo.typeArme ? ` — ${alert.banditInfo.typeArme}` : ''}` : 'Non'}
+          />
+          {alert.banditInfo.directionFuite && (
+            <BanditRow icon="navigate-outline" label="Direction de fuite" value={alert.banditInfo.directionFuite} />
+          )}
+        </View>
+      )}
+
+      {/* Media */}
+      {alert.mediaUris && alert.mediaUris.length > 0 && (
+        <View style={styles.mediaCard}>
+          <Text style={styles.sectionTitle}>Photos / Vidéos jointes</Text>
+          <View style={styles.mediaGrid}>
+            {alert.mediaUris.map((uri) => (
+              <Image key={uri} source={{ uri }} style={styles.mediaThumb} />
+            ))}
+          </View>
+        </View>
+      )}
+
       {/* Dispute info */}
       {alert.disputeCount > 0 && (
         <View style={styles.disputeCard}>
@@ -203,6 +243,19 @@ export default function AlertDetail() {
         </View>
       )}
     </ScrollView>
+  );
+}
+
+function BanditRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+  const C = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#DC262620' }}>
+      <Ionicons name={icon as any} size={16} color="#DC2626" style={{ marginTop: 1 }} />
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: '#999', fontSize: 11 }}>{label}</Text>
+        <Text style={{ color: C.text, fontSize: 14 }}>{value}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -344,5 +397,43 @@ function makeStyles(C: ThemeColors) {
       marginHorizontal: 16,
     },
     actionText: { fontSize: 14, fontWeight: '600' },
+    banditCard: {
+      backgroundColor: '#1a0808',
+      borderRadius: 14,
+      padding: 16,
+      gap: 2,
+      borderWidth: 1,
+      borderColor: '#DC262655',
+    },
+    banditCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 6,
+    },
+    banditCardTitle: {
+      color: '#DC2626',
+      fontWeight: '700',
+      fontSize: 14,
+    },
+    mediaCard: {
+      backgroundColor: C.dark,
+      borderRadius: 14,
+      padding: 16,
+      gap: 10,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    mediaGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    mediaThumb: {
+      width: 80,
+      height: 80,
+      borderRadius: 8,
+      backgroundColor: C.surface,
+    },
   });
 }

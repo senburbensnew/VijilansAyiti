@@ -1,0 +1,143 @@
+{
+    "projectId": "69f2c6fd001a9c9f27f9",
+    "projectName": "VijilansAyiti",
+    "endpoint": "https://nyc.cloud.appwrite.io/v1",
+    "tablesDB": [
+        {
+            "$id": "69f8ddde001e59b0b748",
+            "name": "vijilans_db",
+            "enabled": true
+        }
+    ],
+    "tables": [
+        {
+            "$id": "alerts",
+            "$permissions": ["read(\"any\")", "create(\"users\")", "update(\"users\")"],
+            "databaseId": "69f8ddde001e59b0b748",
+            "name": "alerts",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                { "key": "category",      "type": "string",  "size": 50,   "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "description",   "type": "string",  "size": 2000, "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "zone",          "type": "string",  "size": 255,  "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "latitude",      "type": "double",               "required": true,  "default": null, "array": false },
+                { "key": "longitude",     "type": "double",               "required": true,  "default": null, "array": false },
+                { "key": "reportedAt",    "type": "string",  "size": 50,   "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "publishedAt",   "type": "string",  "size": 50,   "required": false, "default": null, "array": false, "encrypt": false },
+                { "key": "status",        "type": "string",  "size": 50,   "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "severity",      "type": "integer",              "required": true,  "default": null, "array": false, "min": 1, "max": 4 },
+                { "key": "confirmations", "type": "integer",              "required": false, "default": 0,    "array": false },
+                { "key": "disputeCount",  "type": "integer",              "required": false, "default": 0,    "array": false },
+                { "key": "reporterId",    "type": "string",  "size": 255,  "required": false, "default": null, "array": false, "encrypt": false },
+                { "key": "isAnonymous",   "type": "boolean",              "required": true,  "default": null, "array": false },
+                { "key": "publicView",    "type": "boolean",              "required": true,  "default": null, "array": false },
+                { "key": "banditInfo",    "type": "string",  "size": 5000, "required": false, "default": null, "array": false, "encrypt": false },
+                { "key": "mediaUris",     "type": "string",  "size": 5000, "required": false, "default": null, "array": true,  "encrypt": false }
+            ],
+            "indexes": [
+                { "key": "reportedAt_desc", "type": "key", "attributes": ["reportedAt"], "orders": ["DESC"] },
+                { "key": "status_idx",      "type": "key", "attributes": ["status"],     "orders": ["ASC"]  }
+            ]
+        },
+        {
+            "$id": "confirmations",
+            "$permissions": ["create(\"users\")", "read(\"users\")"],
+            "databaseId": "69f8ddde001e59b0b748",
+            "name": "confirmations",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                { "key": "alertId",   "type": "string", "size": 255, "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "userId",    "type": "string", "size": 255, "required": false, "default": null, "array": false, "encrypt": false },
+                { "key": "deviceId",  "type": "string", "size": 255, "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "timestamp", "type": "string", "size": 50,  "required": true,  "default": null, "array": false, "encrypt": false }
+            ],
+            "indexes": [
+                { "key": "alertId_userId", "type": "key", "attributes": ["alertId", "userId"],   "orders": ["ASC", "ASC"] },
+                { "key": "alertId_device", "type": "key", "attributes": ["alertId", "deviceId"], "orders": ["ASC", "ASC"] }
+            ]
+        },
+        {
+            "$id": "disputes",
+            "$permissions": ["create(\"users\")", "read(\"users\")"],
+            "databaseId": "69f8ddde001e59b0b748",
+            "name": "disputes",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                { "key": "alertId",   "type": "string", "size": 255,  "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "userId",    "type": "string", "size": 255,  "required": false, "default": null, "array": false, "encrypt": false },
+                { "key": "reason",    "type": "string", "size": 1000, "required": false, "default": null, "array": false, "encrypt": false },
+                { "key": "timestamp", "type": "string", "size": 50,   "required": true,  "default": null, "array": false, "encrypt": false }
+            ],
+            "indexes": [
+                { "key": "alertId_idx", "type": "key", "attributes": ["alertId"], "orders": ["ASC"] }
+            ]
+        },
+        {
+            "$id": "gang_members",
+            "$permissions": ["read(\"any\")", "create(\"users\")", "update(\"users\")"],
+            "databaseId": "69f8ddde001e59b0b748",
+            "name": "gang_members",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                { "key": "alias",              "type": "string",  "size": 255,  "required": true,  "default": null, "array": false,  "encrypt": false },
+                { "key": "realName",           "type": "string",  "size": 255,  "required": false, "default": null, "array": false,  "encrypt": false },
+                { "key": "gang",               "type": "string",  "size": 255,  "required": true,  "default": null, "array": false,  "encrypt": false },
+                { "key": "territory",          "type": "string",  "size": 255,  "required": false, "default": null, "array": true,   "encrypt": false },
+                { "key": "dangerLevel",        "type": "integer",              "required": true,  "default": null, "array": false,  "min": 1, "max": 4 },
+                { "key": "status",             "type": "string",  "size": 50,   "required": true,  "default": null, "array": false,  "encrypt": false },
+                { "key": "charges",            "type": "string",  "size": 500,  "required": false, "default": null, "array": true,   "encrypt": false },
+                { "key": "lastSeen",           "type": "string",  "size": 50,   "required": false, "default": null, "array": false,  "encrypt": false },
+                { "key": "description",        "type": "string",  "size": 2000, "required": true,  "default": null, "array": false,  "encrypt": false },
+                { "key": "photoUri",           "type": "string",  "size": 1000, "required": false, "default": null, "array": false,  "encrypt": false },
+                { "key": "dcpjRef",            "type": "string",  "size": 255,  "required": false, "default": null, "array": false,  "encrypt": false },
+                { "key": "verificationStatus", "type": "string",  "size": 50,   "required": true,  "default": null, "array": false,  "encrypt": false },
+                { "key": "confirmations",      "type": "integer",              "required": false, "default": 0,    "array": false },
+                { "key": "confirmedBy",        "type": "string",  "size": 255,  "required": false, "default": null, "array": true,   "encrypt": false },
+                { "key": "submittedBy",        "type": "string",  "size": 255,  "required": false, "default": null, "array": false,  "encrypt": false },
+                { "key": "submittedAt",        "type": "string",  "size": 50,   "required": false, "default": null, "array": false,  "encrypt": false }
+            ],
+            "indexes": [
+                { "key": "verificationStatus_idx", "type": "key", "attributes": ["verificationStatus"], "orders": ["ASC"] }
+            ]
+        },
+        {
+            "$id": "gang_votes",
+            "$permissions": ["create(\"users\")", "read(\"users\")"],
+            "databaseId": "69f8ddde001e59b0b748",
+            "name": "gang_votes",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                { "key": "memberId",  "type": "string", "size": 255, "required": true, "default": null, "array": false, "encrypt": false },
+                { "key": "userId",    "type": "string", "size": 255, "required": true, "default": null, "array": false, "encrypt": false },
+                { "key": "timestamp", "type": "string", "size": 50,  "required": true, "default": null, "array": false, "encrypt": false }
+            ],
+            "indexes": [
+                { "key": "memberId_userId", "type": "key", "attributes": ["memberId", "userId"], "orders": ["ASC", "ASC"] }
+            ]
+        },
+        {
+            "$id": "user_profiles",
+            "$permissions": ["read(\"users\")", "create(\"users\")", "update(\"users\")"],
+            "databaseId": "69f8ddde001e59b0b748",
+            "name": "user_profiles",
+            "enabled": true,
+            "rowSecurity": true,
+            "columns": [
+                { "key": "pseudo",           "type": "string",  "size": 255, "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "role",             "type": "string",  "size": 50,  "required": true,  "default": null, "array": false, "encrypt": false },
+                { "key": "trustScore",       "type": "integer",             "required": false, "default": 50,   "array": false },
+                { "key": "reportCount",      "type": "integer",             "required": false, "default": 0,    "array": false },
+                { "key": "validatedReports", "type": "integer",             "required": false, "default": 0,    "array": false },
+                { "key": "falseReports",     "type": "integer",             "required": false, "default": 0,    "array": false },
+                { "key": "isVerified",       "type": "boolean",             "required": true,  "default": null, "array": false },
+                { "key": "isBanned",         "type": "boolean",             "required": true,  "default": null, "array": false }
+            ],
+            "indexes": []
+        }
+    ]
+}

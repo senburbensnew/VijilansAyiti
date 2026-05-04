@@ -6,6 +6,7 @@ import { StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme } from '../hooks/useTheme';
 import { useNotificationStore } from '../store/notificationStore';
+import { useAuthStore } from '../store/authStore';
 import {
   addNotificationResponseListener,
   addForegroundNotificationListener,
@@ -15,11 +16,13 @@ import type * as Notifications from 'expo-notifications';
 export default function RootLayout() {
   const C = useTheme();
   const { initialize } = useNotificationStore();
+  const { loadCurrentUser } = useAuthStore();
   const responseListenerRef = useRef<Notifications.EventSubscription | null>(null);
   const foregroundListenerRef = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
     initialize();
+    loadCurrentUser();
 
     // Navigate to alert detail when user taps a notification
     responseListenerRef.current = addNotificationResponseListener((alertId) => {

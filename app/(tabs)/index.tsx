@@ -62,7 +62,7 @@ const DARK_MAP_STYLE = [
 export default function MapTab() {
   const mapRef = useRef<MapView>(null);
   const { alerts, getActiveAlerts } = useAlertStore();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const C = useTheme();
   const styles = React.useMemo(() => makeStyles(C), [C]);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -284,7 +284,14 @@ export default function MapTab() {
       </View>
 
       {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/report/new')}>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() =>
+          isAuthenticated
+            ? router.push('/report/new')
+            : router.push({ pathname: '/(auth)/login', params: { returnTo: '/report/new' } })
+        }
+      >
         <Ionicons name="add" size={28} color="#fff" />
         <Text style={styles.fabText}>{T('mapFab')}</Text>
       </TouchableOpacity>
